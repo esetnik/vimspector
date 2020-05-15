@@ -414,7 +414,25 @@ def ExpandReferencesInString( orig_s, mapping, user_choices ):
 # That woul dallow expansion in bool and number values, such as ports etc. ?
 def ExpandReferencesInDict( obj, mapping, user_choices ):
   for k in obj.keys():
-    obj[ k ] = ExpandReferencesInObject( obj[ k ], mapping, user_choices )
+    old_value = obj.pop( k )
+    new_value = ExpandReferencesInObject( old_value, mapping, user_choices )
+
+    parts = k.split( '#' )
+    if len( parts ) == 1:
+      new_type = 's'
+      new_k = k
+    else:
+      new_type = parts.pop()
+      new_k = '#'.join( parts )
+
+    if new_type == 's':
+      obj[ new_k ] = new_value
+    elif new_type == 'i':
+      obj[ new_k ] = int( new_value )
+    elif new_type == 'b':
+      obj[ new_k ] = bool( new_value )
+    else:
+      raise ValueError( "Unrecognised field type: " + new_type )
 
 
 def ParseVariables( variables_list, mapping, user_choices ):
